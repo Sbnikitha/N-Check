@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCheck - Universal Trust Verification Agent Network</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="bg-glow"></div>
+    
+    <main class="container">
+        <header>
+            <h1>TrustCheck <span>AI</span></h1>
+            <p>Paste anything suspicious. Know the truth in 10 seconds.</p>
+        </header>
+
+        <section class="input-section">
+            <textarea id="query-input" placeholder="Paste a job offer, apartment listing, crypto DM, or suspicious email here..."></textarea>
+            <button id="verify-btn" onclick="verifyContent()">
+                <span id="btn-text">Verify Now</span>
+                <span id="btn-loader" class="hidden">Scanning...</span>
+            </button>
+        </section>
+
+        <!-- Loading Pipeline visualization -->
+        <section id="pipeline-ui" class="hidden pipeline-section">
+            <h3 class="pipeline-title">Initializing 6-Agent Neural Pipeline</h3>
+            <div class="agent-nodes">
+                <div class="agent-node" id="node-classifier">1. Classifier</div>
+                <div class="agent-node" id="node-extractor">2. Extractor</div>
+                <div class="agent-node parallel" id="node-parallel">3. Parallel Analysts (OSINT / Forensic)</div>
+                <div class="agent-node" id="node-synthesizer">4. Synthesizer</div>
+            </div>
+        </section>
+
+        <!-- Results UI -->
+        <section id="results-ui" class="hidden glass-card results-section">
+            <div class="score-container">
+                <div class="circular-progress" id="score-circle">
+                    <span class="progress-value" id="score-text">--</span>
+                </div>
+                <div class="verdict-summary">
+                    <h2 id="verdict-title">Verdict Header</h2>
+                    <p id="recommendation-text">Actionable recommendation goes here.</p>
+                </div>
+            </div>
+            
+            <div class="detailed-analysis">
+                <h3>Detailed Verdict Explanation</h3>
+                <p id="verdict-text"></p>
+            </div>
+
+            <div class="evidence-grid" id="facts-container">
+                <!-- Dynamically injected facts + weightages -->
+            </div>
+
+            <div class="action-plan glass-card">
+                <h3>Plan of Action</h3>
+                <ul id="plan-of-action-list">
+                    <!-- Actions -->
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

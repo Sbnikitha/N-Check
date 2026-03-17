@@ -1,24 +1,31 @@
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
+from typing import List, Dict, Any
 from agents.core.llm import get_nemotron
 from agents.core.state import TrustState
 
+class FactWeight(BaseModel):
+    fact: str = Field(description="The specific evidence or fact found")
+    weightage: int = Field(description="How much this impacts the score (e.g., -20 for major scam, +10 for verified entity)")
+    reasoning: str = Field(description="Why this weightage was given")
+
 class VerdictOutput(BaseModel):
     trust_score: int = Field(description="Score between 0 (Extreme Scam) and 100 (Completely Safe).")
-    verdict: str = Field(description="Paragraph summarizing why this score was given.")
+    final_verdict: str = Field(description="Paragraph summarizing why this score was given.")
+    facts_and_weights: List[FactWeight] = Field(description="List of facts/evidence with their statistical weight and reasoning")
     recommendation: str = Field(description="One sentence recommendation on what the user should do.")
+    plan_of_action: List[str] = Field(description="Step-by-step plan of action for the user")
 
 def verdict_node(state: TrustState):
     llm = get_nemotron().with_structured_output(VerdictOutput)
     
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are the final Verdict Synthesizer. Review all evidence gathered by the previous agents to issue a final trust score (0-100), a detailed verdict explanation, and a recommendation. Scams get heavily penalized toward 0."),
-        ("user", "Input Text: {input}\n\nOSINT Findings: {osint_findings}\nForensic Flags: {forensic_flags}\nPersuasion Tactics: {persuasion_tactics}\n\nSynthesize this evidence.")
+        ("system", "You are the final Verdict Synthesizer. Review all evidence gathered by the previous agents. Issue a final trust score (0-100). Scams get penalized toward 0. Crucially, provide a detailed breakdown of the facts/evidence, assigning a 'weightage' (negative or positive impact on the score) and 'reasoning' for each fact. Finally, provide a step-by-step plan of action for the user."),
+        ("user", "Input Text: {input}\n\nOSINT Findings: {osint_findings}\nForensic Flags: {forensic_flags}\nPersuasion Tactics: {persuasion_tactics}\n\nSynthesize this evidence into facts, weightages, trust score, and a plan of action.")
     ])
     
     chain = prompt | llm
     
-    # Safely get lists, as parallel add merges might make them nested if empty
     result = chain.invoke({
         "input": state["input_content"],
         "osint_findings": state.get("osint_findings", []),
@@ -28,6 +35,8 @@ def verdict_node(state: TrustState):
     
     return {
         "trust_score": result.trust_score,
-        "final_verdict": result.verdict,
-        "recommendation": result.recommendation
+        "final_verdict": result.final_verdict,
+        "facts_and_weights": [dict(f) for f in result.facts_and_weights],
+        "recommendation": result.recommendation,
+        "plan_of_action": result.plan_of_action
     }

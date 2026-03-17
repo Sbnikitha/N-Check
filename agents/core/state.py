@@ -27,4 +27,6 @@ class TrustState(TypedDict):
     # 6. Verdict Synthesizer Output
     trust_score: int
     final_verdict: str
+    facts_and_weights: List[Dict[str, Any]]
     recommendation: str
+    plan_of_action: List[str]
