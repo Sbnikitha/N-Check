@@ -22,7 +22,18 @@ def extractor_node(state: TrustState):
         "content_type": state.get("content_type", "Unknown")
     })
     
+    # Safety check for non-pydantic or None returns
+    entities = {}
+    claims = []
+    if result:
+        if isinstance(result, dict):
+            entities = result.get("extracted_entities", {})
+            claims = result.get("claims", [])
+        else:
+            entities = getattr(result, "extracted_entities", {})
+            claims = getattr(result, "claims", [])
+
     return {
-        "extracted_entities": result.extracted_entities,
-        "claims": result.claims
+        "extracted_entities": entities,
+        "claims": claims
     }

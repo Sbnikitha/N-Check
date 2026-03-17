@@ -12,16 +12,10 @@ def get_nemotron():
         raise ValueError("Please provide an OPENROUTER_API_KEY environment variable.")
 
     return ChatOpenAI(
-        model="nvidia/nvidia-nemotron-nano-9b-v2",
+        model="nvidia/nemotron-nano-9b-v2",
         openai_api_key=api_key,
         openai_api_base="https://openrouter.ai/api/v1",
-        temperature=0.2, # Low temp for analytical tasks
-        model_kwargs={
-             "headers": {
-                 "HTTP-Referer": "https://ncheck.ai",
-                 "X-Title": "NCheck Trust Agent"
-             }
-        }
+        temperature=0.2 # Low temp for analytical tasks
     )
 
 def get_tavily_search():

@@ -1,4 +1,4 @@
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from agents.core.llm import get_nemotron, get_tavily_search
 from agents.core.tools import whois_lookup, google_maps_verify, business_registry_check
 from agents.core.state import TrustState
@@ -10,7 +10,8 @@ def osint_node(state: TrustState):
     
     prompt = ChatPromptTemplate.from_messages([
         ("system", "You are an expert OSINT researcher identifying fraud. Verify the following entities and claims using web search. Report any red flags (e.g., domain registered recently, company not found). Return a bulleted list of findings."),
-        ("user", "Extracted Entities: {entities}\nClaims: {claims}\n\nDo your research and provide only the factual findings.")
+        ("user", "Extracted Entities: {entities}\nClaims: {claims}\n\nDo your research and provide only the factual findings."),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
     
     agent = create_tool_calling_agent(llm, tools, prompt)

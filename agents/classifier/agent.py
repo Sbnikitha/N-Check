@@ -18,7 +18,18 @@ def classifier_node(state: TrustState):
     chain = prompt | llm
     result = chain.invoke({"input_content": state["input_content"]})
     
+    # Safety check for non-pydantic or None returns
+    c_type = "Unknown"
+    risk = "MEDIUM"
+    if result:
+        if isinstance(result, dict):
+            c_type = result.get("content_type", "Unknown")
+            risk = result.get("initial_risk_level", "MEDIUM")
+        else:
+            c_type = getattr(result, "content_type", "Unknown")
+            risk = getattr(result, "initial_risk_level", "MEDIUM")
+
     return {
-        "content_type": result.content_type,
-        "initial_risk_level": result.initial_risk_level
+        "content_type": c_type,
+        "initial_risk_level": risk
     }

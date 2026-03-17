@@ -21,6 +21,14 @@ def forensic_node(state: TrustState):
         "content_type": state.get("content_type", "Unknown")
     })
     
+    # Safety check for non-pydantic or None returns from smaller models
+    flags = []
+    if result:
+        if isinstance(result, dict):
+            flags = result.get("flags", [])
+        else:
+            flags = getattr(result, "flags", [])
+            
     return {
-        "forensic_flags": result.flags
+        "forensic_flags": flags
     }

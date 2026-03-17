@@ -10,11 +10,11 @@ class FactWeight(BaseModel):
     reasoning: str = Field(description="Why this weightage was given")
 
 class VerdictOutput(BaseModel):
-    trust_score: int = Field(description="Score between 0 (Extreme Scam) and 100 (Completely Safe).")
-    final_verdict: str = Field(description="Paragraph summarizing why this score was given.")
-    facts_and_weights: List[FactWeight] = Field(description="List of facts/evidence with their statistical weight and reasoning")
-    recommendation: str = Field(description="One sentence recommendation on what the user should do.")
-    plan_of_action: List[str] = Field(description="Step-by-step plan of action for the user")
+    trust_score: int = Field(default=50, description="Score between 0 (Extreme Scam) and 100 (Completely Safe).")
+    final_verdict: str = Field(default="No verdict generated.", description="Paragraph summarizing why this score was given.")
+    facts_and_weights: List[FactWeight] = Field(default_factory=list, description="List of facts/evidence with their statistical weight and reasoning")
+    recommendation: str = Field(default="Proceed with caution.", description="One sentence recommendation on what the user should do.")
+    plan_of_action: List[str] = Field(default_factory=list, description="Step-by-step plan of action for the user")
 
 def verdict_node(state: TrustState):
     llm = get_nemotron().with_structured_output(VerdictOutput)
@@ -33,10 +33,32 @@ def verdict_node(state: TrustState):
         "persuasion_tactics": state.get("persuasion_tactics", [])
     })
     
+    # Safety check for complex structured output
+    score = 50
+    verdict = "Could not synthesize verdict."
+    facts = []
+    reco = "Be cautious."
+    plan = ["Verify details manually."]
+
+    if result:
+        if isinstance(result, dict):
+            score = result.get("trust_score", 50)
+            verdict = result.get("final_verdict", verdict)
+            facts = [f.model_dump() if hasattr(f, "model_dump") else f for f in result.get("facts_and_weights", [])]
+            reco = result.get("recommendation", reco)
+            plan = result.get("plan_of_action", plan)
+        else:
+            score = getattr(result, "trust_score", 50)
+            verdict = getattr(result, "final_verdict", verdict)
+            raw_facts = getattr(result, "facts_and_weights", [])
+            facts = [f.model_dump() if hasattr(f, "model_dump") else f for f in raw_facts]
+            reco = getattr(result, "recommendation", reco)
+            plan = getattr(result, "plan_of_action", plan)
+
     return {
-        "trust_score": result.trust_score,
-        "final_verdict": result.final_verdict,
-        "facts_and_weights": [dict(f) for f in result.facts_and_weights],
-        "recommendation": result.recommendation,
-        "plan_of_action": result.plan_of_action
+        "trust_score": score,
+        "final_verdict": verdict,
+        "facts_and_weights": facts,
+        "recommendation": reco,
+        "plan_of_action": plan
     }

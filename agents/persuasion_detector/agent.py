@@ -18,6 +18,14 @@ def persuasion_node(state: TrustState):
     chain = prompt | llm
     result = chain.invoke({"input_content": state["input_content"]})
     
+    # Safety check for non-pydantic or None returns
+    tactics = []
+    if result:
+        if isinstance(result, dict):
+            tactics = result.get("tactics", [])
+        else:
+            tactics = getattr(result, "tactics", [])
+
     return {
-        "persuasion_tactics": result.tactics
+        "persuasion_tactics": tactics
     }
